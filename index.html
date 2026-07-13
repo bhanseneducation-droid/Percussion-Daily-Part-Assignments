@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Percussion Part Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#1B2E28;
+    --bg-deep-2:#142621;
+    --paper:#EDE6D6;
+    --paper-card:#FFFDF8;
+    --ink:#2B2620;
+    --ink-soft:#5B5347;
+    --brass:#C9A227;
+    --brass-dark:#9C7C1B;
+    --red:#A23E3E;
+    --line:#D8CFB8;
+    --line-deep:#2F443D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .site-header{
+    background:var(--bg-deep);
+    background-image:linear-gradient(180deg,var(--bg-deep) 0%,var(--bg-deep-2) 100%);
+    color:var(--paper);
+    padding:28px 32px 0 32px;
+    border-bottom:6px solid var(--brass);
+  }
+  .site-header h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    letter-spacing:0.02em;
+    font-size:28px;
+    margin:0 0 4px 0;
+    text-transform:uppercase;
+  }
+  .site-header p.tagline{
+    margin:0 0 20px 0;
+    color:#C9C2AE;
+    font-size:14px;
+    max-width:640px;
+    line-height:1.5;
+  }
+  nav.tabs{
+    display:flex;
+    gap:2px;
+    flex-wrap:wrap;
+  }
+  nav.tabs button{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    font-size:13px;
+    font-weight:600;
+    background:transparent;
+    color:#A9A08A;
+    border:none;
+    border-bottom:3px solid transparent;
+    padding:12px 18px;
+    cursor:pointer;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  nav.tabs button:hover{ color:var(--paper); }
+  nav.tabs button.active{
+    color:var(--paper);
+    border-bottom:3px solid var(--brass);
+  }
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 32px 80px 32px;
+  }
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+  .card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 22px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    font-size:17px;
+    margin:0 0 4px 0;
+  }
+  .card .sub{
+    color:var(--ink-soft);
+    font-size:13px;
+    margin:0 0 16px 0;
+    line-height:1.5;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  th{
+    text-align:left;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+    border-bottom:2px solid var(--line);
+    padding:6px 8px;
+  }
+  td{
+    border-bottom:1px solid var(--line);
+    padding:6px 8px;
+    vertical-align:middle;
+  }
+  input[type="text"], input[type="number"], select{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:6px 8px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+    width:100%;
+  }
+  input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--brass-dark); cursor:pointer; }
+  .btn{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    font-size:13px;
+    font-weight:600;
+    background:var(--brass);
+    color:var(--bg-deep);
+    border:none;
+    border-radius:4px;
+    padding:9px 16px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn:hover{ background:var(--brass-dark); color:var(--paper); }
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line-deep);
+  }
+  .btn.secondary:hover{ background:var(--ink); color:var(--paper); }
+  .btn.danger{ background:var(--red); color:#fff; }
+  .btn.danger:hover{ background:#7d2f2f; }
+  .btn.small{ padding:4px 10px; font-size:11px; }
+  .row-actions{ white-space:nowrap; }
+  .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  .day-check{ text-align:center; }
+  .day-check label{ font-size:10px; color:var(--ink-soft); display:block; margin-bottom:2px; }
+  .schedule-table th, .schedule-table td{ text-align:center; }
+  .schedule-table td:first-child, .schedule-table th:first-child{ text-align:left; font-weight:600; }
+  .chip{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    padding:3px 8px;
+    border-radius:3px;
+    min-width:52px;
+  }
+  .chip.pitched{ background:var(--brass); color:var(--bg-deep); font-weight:700; }
+  .chip.unpitched{ background:transparent; border:1.5px solid var(--ink-soft); color:var(--ink); }
+  .chip.fill-pad{ background:transparent; border:1.5px dashed var(--line-deep); color:var(--ink-soft); }
+  .chip.empty{ color:var(--line); }
+  .banner{
+    background:#F4EEDD;
+    border:1px solid var(--line);
+    border-left:4px solid var(--brass-dark);
+    padding:12px 16px;
+    font-size:13px;
+    border-radius:4px;
+    margin-bottom:20px;
+    line-height:1.5;
+  }
+  .banner strong{ color:var(--ink); }
+  .warning-list{ font-size:12px; color:var(--red); margin-top:10px; }
+  .score-line{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink-soft); margin-top:10px; }
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:20px;
+  }
+  @media print{
+    .site-header, nav.tabs, .toolbar, .no-print{ display:none !important; }
+    body{ background:#fff; }
+    .card{ border:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Percussion Part Scheduler</h1>
+  <p class="tagline">Generate fair, balanced daily percussion part assignments for your ensembles. Everything runs in this browser tab — nothing you type here is sent to a server. Export a file to save your work.</p>
+  <nav class="tabs">
+    <button data-panel="instruments" class="active">Instruments</button>
+    <button data-panel="students">Students</button>
+    <button data-panel="generate">Generate</button>
+    <button data-panel="saveload">Save / Load</button>
+    <button data-panel="help">Help</button>
+  </nav>
+</header>
+
+<main>
+
+  <div class="banner no-print">
+    <strong>Your data stays here.</strong> This page keeps everything in your browser's memory and (as a safety net) in this browser's local storage, so a refresh won't lose your work. Nothing is ever uploaded anywhere. To back up your setup or move it to another computer, use <strong>Save / Load</strong> to download or open a file.
+  </div>
+
+  <!-- INSTRUMENTS PANEL -->
+  <section id="panel-instruments" class="panel active">
+    <div class="card">
+      <h2>Instruments</h2>
+      <p class="sub">Define each instrument, whether it's pitched or unpitched, how many students can play it per day, and its role. <strong>Core</strong> instruments are assigned first and are required each day (up to the daily limit). <strong>Optional</strong> instruments are assigned next, if there's room. Leftover students get filled in from your <strong>Fill</strong>-role instruments — a pitched one if they still need pitched days to hit their ratio, otherwise an unpitched one. Make sure you have at least one active Pitched instrument and one active Unpitched instrument marked as Fill (any names you like — "Bells" and "Pad" are just the defaults).</p>
+      <div class="toolbar">
+        <button class="btn" id="add-instrument">+ Add Instrument</button>
+      </div>
+      <table id="instruments-table">
+        <thead>
+          <tr>
+            <th style="width:26%">Name</th>
+            <th style="width:16%">Type</th>
+            <th style="width:14%">Daily Limit</th>
+            <th style="width:16%">Role</th>
+            <th style="width:10%">Active</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STUDENTS PANEL -->
+  <section id="panel-students" class="panel">
+    <div class="card">
+      <h2>Students</h2>
+      <p class="sub">Add each student, the ensemble they belong to, and check any days they will be <strong>absent / unavailable</strong>. The scheduler builds one schedule per ensemble.</p>
+      <div class="toolbar">
+        <button class="btn" id="add-student">+ Add Student</button>
+      </div>
+      <table id="students-table">
+        <thead>
+          <tr>
+            <th style="width:22%">Name</th>
+            <th style="width:16%">Ensemble</th>
+            <th class="day-check"><label>Mon</label></th>
+            <th class="day-check"><label>Tue</label></th>
+            <th class="day-check"><label>Wed</label></th>
+            <th class="day-check"><label>Thu</label></th>
+            <th class="day-check"><label>Fri</label></th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- GENERATE PANEL -->
+  <section id="panel-generate" class="panel">
+    <div class="card">
+      <h2>Generate Schedule</h2>
+      <p class="sub">Runs up to 1,000 randomized trial schedules per ensemble and keeps the best-scoring one — fewer repeats of the same instrument, and each student's pitched/unpitched ratio matched to how many days they're available.</p>
+      <div class="toolbar">
+        <select id="ensemble-select" style="max-width:260px;"></select>
+        <button class="btn" id="generate-one">Generate This Ensemble</button>
+        <button class="btn secondary" id="generate-all">Generate All Ensembles</button>
+        <button class="btn secondary no-print" id="print-schedule">Print</button>
+      </div>
+      <div id="schedule-output"></div>
+    </div>
+  </section>
+
+  <!-- SAVE/LOAD PANEL -->
+  <section id="panel-saveload" class="panel">
+    <div class="card">
+      <h2>Save / Load</h2>
+      <p class="sub">Your instrument list, roster, and most recently generated schedules can be saved to a file on your computer, and loaded back later or on another computer. This file is the only copy of your data outside this browser tab — keep it somewhere safe.</p>
+      <div class="toolbar">
+        <button class="btn" id="save-file">Save to File</button>
+        <label class="btn secondary" style="display:inline-block;">
+          Load from File
+          <input type="file" id="load-file" accept=".json" style="display:none;">
+        </label>
+        <button class="btn danger" id="clear-all">Clear All Data</button>
+      </div>
+      <p class="sub" id="saveload-status"></p>
+    </div>
+  </section>
+
+  <!-- HELP PANEL -->
+  <section id="panel-help" class="panel">
+    <div class="card">
+      <h2>How this works</h2>
+      <p class="sub">
+        1. Set up your <strong>Instruments</strong> — mark each Pitched or Unpitched, give it a daily limit, and assign it a role.<br>
+        2. Add your <strong>Students</strong> with their ensemble and weekly availability.<br>
+        3. Go to <strong>Generate</strong>, pick an ensemble (or generate all at once), and review the schedule.<br>
+        4. Use <strong>Save / Load</strong> to back up your setup or bring it to another computer.<br><br>
+        Nothing is stored on a server. If you close this tab without saving, your data is gone — the local-storage safety net will restore your last session in <em>this</em> browser, but it won't help you on a different device.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer>Runs entirely in your browser. No accounts, no server-side storage, no tracking of student data.</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
