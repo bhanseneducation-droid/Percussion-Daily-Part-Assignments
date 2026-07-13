@@ -217,6 +217,115 @@ function addStudent() {
 }
 
 // ------------------------------------------------------------
+// CSV import for students
+// Expected columns: Name, Ensemble, Monday Absent, Tuesday Absent,
+// Wednesday Absent, Thursday Absent, Friday Absent
+// Day columns accept TRUE/FALSE, YES/NO, Y/N, X, or 1/0 (case-insensitive).
+// ------------------------------------------------------------
+function isTruthyCell(val) {
+  const v = (val || "").toString().trim().toLowerCase();
+  return ["true", "yes", "y", "x", "1"].includes(v);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += char;
+      }
+    } else {
+      if (char === '"') { inQuotes = true; }
+      else if (char === ',') { row.push(field); field = ""; }
+      else if (char === '\n' || char === '\r') {
+        if (char === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = "";
+        if (row.some(c => c.trim() !== "")) rows.push(row);
+        row = [];
+      } else {
+        field += char;
+      }
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    if (row.some(c => c.trim() !== "")) rows.push(row);
+  }
+  return rows;
+}
+
+function downloadCSVTemplate() {
+  const header = "Name,Ensemble,Monday Absent,Tuesday Absent,Wednesday Absent,Thursday Absent,Friday Absent";
+  const example1 = "Jane Smith,7th Grade,FALSE,FALSE,TRUE,FALSE,FALSE";
+  const example2 = "Alex Chen,8th Grade,FALSE,FALSE,FALSE,FALSE,FALSE";
+  const csv = [header, example1, example2].join("\n") + "\n";
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "student-roster-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importStudentsFromCSV(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const text = reader.result.replace(/^\uFEFF/, ""); // strip BOM some spreadsheet apps add
+      const rows = parseCSV(text);
+      if (rows.length === 0) throw new Error("File appears to be empty.");
+
+      let startIndex = 0;
+      const firstCell = (rows[0][0] || "").trim().toLowerCase();
+      if (firstCell === "name") startIndex = 1; // skip header row if present
+
+      const importedStudents = [];
+      for (let i = startIndex; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0] || !r[0].trim()) continue;
+        const absent = {};
+        DAYS.forEach((day, idx) => { absent[day] = isTruthyCell(r[2 + idx]); });
+        importedStudents.push({
+          id: newId(),
+          name: r[0].trim(),
+          ensemble: (r[1] || "").trim(),
+          absent
+        });
+      }
+
+      if (importedStudents.length === 0) {
+        throw new Error("No student rows found. Check the file matches the template's column order.");
+      }
+
+      const replace = confirm(
+        `Found ${importedStudents.length} student(s) in this file.\n\n` +
+        `Click OK to REPLACE your current roster, or Cancel to ADD these to your existing roster.`
+      );
+      state.students = replace ? importedStudents : state.students.concat(importedStudents);
+
+      autosave();
+      renderStudents();
+      populateEnsembleSelect();
+      alert(`Imported ${importedStudents.length} student(s).`);
+    } catch (e) {
+      alert("Couldn't import that CSV: " + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+
+// ------------------------------------------------------------
 // Ensemble dropdown for Generate tab
 // ------------------------------------------------------------
 function getEnsembles() {
@@ -608,6 +717,11 @@ function init() {
 
   document.getElementById("add-instrument").addEventListener("click", addInstrument);
   document.getElementById("add-student").addEventListener("click", addStudent);
+  document.getElementById("import-csv").addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) importStudentsFromCSV(e.target.files[0]);
+    e.target.value = ""; // reset so re-importing the same filename works
+  });
+  document.getElementById("download-csv-template").addEventListener("click", downloadCSVTemplate);
   document.getElementById("generate-one").addEventListener("click", runGenerateOne);
   document.getElementById("generate-all").addEventListener("click", runGenerateAll);
   document.getElementById("print-schedule").addEventListener("click", () => window.print());

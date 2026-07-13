@@ -6,7 +6,7 @@ No accounts, no backend, no student data ever leaves the visitor's browser.
 ## Putting this on GitHub Pages
 
 1. Create a new GitHub repository (public is fine, e.g. `percussion-scheduler`).
-2. Upload `index.html` and `app.js` to the root of that repository.
+2. Upload `index.html`, `app.js`, and `student-roster-template.xlsx` to the root of that repository.
 3. Go to the repo's **Settings → Pages**.
 4. Under "Build and deployment", set **Source** to "Deploy from a branch", branch `main`, folder `/ (root)`. Save.
 5. GitHub will give you a URL like `https://yourusername.github.io/percussion-scheduler/` within a minute or two. That's the link to share.
@@ -15,6 +15,7 @@ No accounts, no backend, no student data ever leaves the visitor's browser.
 
 - `index.html` — page structure and styling.
 - `app.js` — all the app logic, including the scheduling algorithm (ported from the original Google Apps Script version).
+- `student-roster-template.xlsx` — a fillable Excel workbook (with an Instructions tab and dropdown validation) that the Students tab links to as an alternative to the plain CSV template. This file must sit in the same folder as `index.html` for that link to work.
 
 ## Notes on the scheduling algorithm
 
