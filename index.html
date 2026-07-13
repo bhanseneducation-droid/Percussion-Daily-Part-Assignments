@@ -249,14 +249,13 @@
   <section id="panel-students" class="panel">
     <div class="card">
       <h2>Students</h2>
-      <p class="sub">Add each student, the ensemble they belong to, and check any days they will be <strong>absent / unavailable</strong>. The scheduler builds one schedule per ensemble. You can also import a roster from a CSV file — a names-only file works fine too; any missing ensemble or absence info just defaults to blank/available and you can fill it in here afterward. Download the CSV template below to see the expected columns, or the Excel template for a fillable version with dropdown menus.</p>
+      <p class="sub">Add each student, the ensemble they belong to, and check any days they will be <strong>absent / unavailable</strong>. The scheduler builds one schedule per ensemble. You can also import a roster from a CSV file — a names-only file works fine too; any missing ensemble or absence info just defaults to blank/available and you can fill it in here afterward. Download the Excel template for a fillable version with dropdown menus and instructions.</p>
       <div class="toolbar">
         <button class="btn" id="add-student">+ Add Student</button>
         <label class="btn secondary" style="display:inline-block;">
           Import from CSV
           <input type="file" id="import-csv" accept=".csv" style="display:none;">
         </label>
-        <button class="btn secondary" id="download-csv-template">Download CSV Template</button>
         <a class="btn secondary" href="student-roster-template.xlsx" download>Download Excel Template</a>
       </div>
       <table id="students-table">

@@ -261,22 +261,6 @@ function parseCSV(text) {
   return rows;
 }
 
-function downloadCSVTemplate() {
-  const header = "Name,Ensemble,Monday Absent,Tuesday Absent,Wednesday Absent,Thursday Absent,Friday Absent";
-  const example1 = "Jane Smith,7th Grade,FALSE,FALSE,TRUE,FALSE,FALSE";
-  const example2 = "Alex Chen,8th Grade,FALSE,FALSE,FALSE,FALSE,FALSE";
-  const csv = [header, example1, example2].join("\n") + "\n";
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "student-roster-template.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 function importStudentsFromCSV(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -721,7 +705,6 @@ function init() {
     if (e.target.files && e.target.files[0]) importStudentsFromCSV(e.target.files[0]);
     e.target.value = ""; // reset so re-importing the same filename works
   });
-  document.getElementById("download-csv-template").addEventListener("click", downloadCSVTemplate);
   document.getElementById("generate-one").addEventListener("click", runGenerateOne);
   document.getElementById("generate-all").addEventListener("click", runGenerateAll);
   document.getElementById("print-schedule").addEventListener("click", () => window.print());
